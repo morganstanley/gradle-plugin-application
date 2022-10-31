@@ -1,0 +1,112 @@
+plugins {
+    id "com.ms.gradle.application"
+}
+
+version = "1.0"
+
+repositories {
+    maven {
+        url "repo/maven"
+    }
+}
+
+dependencies {
+    implementation fileTree("repo/local").include("*.jar")
+    implementation "com.ms.test:datetime-current:4.5"
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+                "Implementation-Title": "Application plugin functional test",
+                "Implementation-Version": "1.0.b42")
+    }
+}
+
+task emptyJar(type: Jar) {
+    archiveBaseName = "empty"
+}
+
+// --- Valid usages ---
+
+applications.main {
+    mainClass = "com.ms.test.app.PrintTimestamp"
+}
+
+applications.create("simple") {
+    fromSourceSet sourceSets.main
+    mainClass = "com.ms.test.app.PrintTimestamp"
+}
+
+applications.create("withoutRawJar") {
+    dependencies = locateDependencies(sourceSets.main)
+    mainClass = "com.ms.test.app.PrintTimestamp"
+}
+
+applications.create("withoutDependencies") {
+    rawJar = locateRawJar(sourceSets.main)
+    mainClass = "com.ms.test.app.PrintTimestamp"
+}
+
+applications.create("complex") {
+    description = "This is an application showcasing all the possibilities of the DSL."
+    applicationBaseName = "complexApp"
+    rawJar = tasks.jar
+    dependencies = configurations.runtimeClasspath
+    dependencyDirectoryName = "complexDeps"
+    mainClass = "com.ms.test.app.PrintTimestamp"
+    applicationJar {
+        destinationDirectory = layout.buildDirectory.dir("appsComplex")
+        archiveBaseName = "complexJar"
+    }
+    distribution {
+        contents.from file("README.md")
+    }
+}
+
+task manualApplicationJar(type: com.ms.gradle.application.ApplicationJar) {
+    fromSourceSet sourceSets.main
+    mainClass = "com.ms.test.app.PrintTimestamp"
+    archiveBaseName = "manualJar"
+}
+distributions {
+    manual {
+        distributionBaseName = "manualDist"
+        contents {
+            with manualApplicationJar.applicationCopySpec()
+            from file("README.md")
+        }
+    }
+}
+
+task installFullyManualDist(type: Sync) {
+    into layout.buildDirectory.dir("install/fullyManual")
+    with manualApplicationJar.applicationCopySpec().into("app")
+    from file("README.md")
+    eachFile {
+        relativePath = relativePath.prepend("content")
+    }
+}
+
+// --- Invalid usages ---
+
+applications.create("missingDependencyDirectoryName") {
+    fromSourceSet sourceSets.main
+    dependencyDirectoryName.convention(null).set(null)
+    mainClass = "com.ms.test.app.PrintTimestamp"
+}
+
+applications.create("emptyDependencyDirectoryName") {
+    fromSourceSet sourceSets.main
+    dependencyDirectoryName = ""
+    mainClass = "com.ms.test.app.PrintTimestamp"
+}
+
+applications.create("missingMainClass") {
+    fromSourceSet sourceSets.main
+}
+
+applications.create("emptyMainClass") {
+    fromSourceSet sourceSets.main
+    mainClass = ""
+}
