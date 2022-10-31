@@ -9,11 +9,12 @@ tasks.wrapper {
 
 plugins {
     `java-gradle-plugin`
+    `maven-publish`
+    id("com.gradle.plugin-publish").version("1.0.0")
     checkstyle
     pmd
     id("com.github.spotbugs").version("5.0.13")
     jacoco
-    `maven-publish`
 }
 
 group = "com.ms.gradle"
@@ -26,12 +27,6 @@ val pluginDescription = "Allows packaging your Java-based application for distri
         "Gradle's built-in Application plugin does, but in a more standard and more flexible way."
 val pluginUrl = "https://github.com/morganstanley/gradle-plugin-application"
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    withJavadocJar()
-    withSourcesJar()
-}
-
 gradlePlugin {
     plugins.create(project.name) {
         id = pluginId
@@ -39,6 +34,31 @@ gradlePlugin {
         displayName = pluginTitle
         description = pluginDescription
     }
+}
+
+pluginBundle {
+    website = pluginUrl
+    vcsUrl = pluginUrl
+    pluginTags = mapOf(
+        project.name to setOf("application", "executable", "jar", "java", "jvm"))
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+            "Automatic-Module-Name" to pluginId,
+            "Implementation-Title" to pluginTitle,
+            "Implementation-Version" to project.version,
+            "Implementation-Vendor" to "Morgan Stanley",
+            "Implementation-URL" to pluginUrl)
+    }
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    // If we call these here, `PublishPlugin.forceJavadocAndSourcesJars` will throw an exception when it does the same
+    // withJavadocJar()
+    // withSourcesJar()
 }
 
 repositories {
@@ -114,15 +134,4 @@ tasks.withType<ValidatePlugins> {
     enableStricterValidation.set(true)
     ignoreFailures.set(false)
     failOnWarning.set(true)
-}
-
-publishing {
-    repositories.maven(buildDir.resolve("publish-maven"))
-    publications.withType<MavenPublication> {
-        pom {
-            name.set(pluginTitle)
-            description.set(pluginDescription)
-            url.set(pluginUrl)
-        }
-    }
 }
