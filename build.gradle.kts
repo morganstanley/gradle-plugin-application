@@ -126,7 +126,7 @@ tasks.withType<Jar> {
 }
 
 checkstyle {
-    toolVersion = "9.3"
+    toolVersion = "10.4"
     maxErrors = 0
     maxWarnings = 0
 }
