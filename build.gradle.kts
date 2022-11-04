@@ -113,6 +113,7 @@ dependencies {
 
 tasks.withType<Jar> {
     manifest.attributes(manifestAttributes)
+    from(files("LICENSE", "NOTICE"))
 }
 
 checkstyle {
