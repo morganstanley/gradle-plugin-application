@@ -176,6 +176,7 @@ tasks.validatePlugins {
 }
 
 tasks.publishPlugins {
+    dependsOn(tasks.build)
     doFirst {
         val localStatus = checkNotNull(gitStatus) { "Could not query local Git repository" }
         val releaseTag = "v${project.version}"
