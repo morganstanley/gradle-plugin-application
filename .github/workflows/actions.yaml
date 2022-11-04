@@ -1,7 +1,8 @@
 name: Run build on each commit
 on: push
 jobs:
-  gradle:
+  build:
+    name: Gradle build
     runs-on: ubuntu-latest
     steps:
     - name: Checkout project sources
@@ -12,9 +13,11 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         arguments: build --info --stacktrace
-    - name: Upload build reports
+    - name: Upload build artifacts
       if: always()
       uses: actions/upload-artifact@v3
       with:
-        name: build-reports
-        path: build/reports/
+        name: build-artifacts
+        path: |
+          build/libs/
+          build/reports/
