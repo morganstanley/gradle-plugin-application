@@ -13,8 +13,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Preconditions;
+import org.gradle.api.JavaVersion;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.BuildTask;
 import org.gradle.testkit.runner.GradleRunner;
@@ -23,6 +25,7 @@ import org.gradle.util.GradleVersion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
@@ -34,7 +37,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
@@ -56,15 +61,54 @@ class ApplicationPluginFunctionalTest {
     private static final String TEST_NAME = ApplicationPluginFunctionalTest.class.getSimpleName();
     private static final String MANIFEST_PATH = "META-INF/MANIFEST.MF";
 
-    // See: `build.gradle.kts` and https://gradle.org/releases/
-    private static final String GRADLE_VERSION_CURRENT = GradleVersion.current().getVersion();
-    private static final String[] GRADLE_VERSIONS_SUPPORTED = {
-            GRADLE_VERSION_CURRENT, "7.4.2", "7.3.3", "7.2", "7.1.1", "7.0.2",
-            "6.9.3", "6.8.3", "6.7.1", "6.6.1", "6.5.1", "6.4.1", "6.3", "6.2.2", "6.1.1", "6.0.1"};
+    // See: https://docs.gradle.org/current/userguide/compatibility.html#java
+    private static final Map<JavaVersion, GradleVersion> MINIMUM_GRADLE_VERSIONS = toImmutableMap(Stream.of(
+                    Pair.of(JavaVersion.VERSION_1_8, GradleVersion.version("2.0")),
+                    Pair.of(JavaVersion.VERSION_11, GradleVersion.version("5.0")),
+                    Pair.of(JavaVersion.VERSION_17, GradleVersion.version("7.3"))),
+            Pair::getKey, Pair::getValue);
+
+    private static final GradleVersion CURRENT_GRADLE_VERSION = GradleVersion.current();
 
     @Nonnull
-    private static Stream<String> gradleVersions() {
-        return Arrays.stream(GRADLE_VERSIONS_SUPPORTED);
+    private static Stream<GradleVersion> gradleVersions(@Nonnull GradleVersion version, @Nonnull String... versions) {
+        return Stream.concat(Stream.of(version), Stream.of(versions).map(GradleVersion::version));
+    }
+
+    // See: https://gradle.org/releases/
+    @Nonnull
+    private static Stream<GradleVersion> supportedGradleVersions() {
+        return gradleVersions(CURRENT_GRADLE_VERSION, "7.4.2", "7.3.3", "7.2", "7.1.1", "7.0.2",
+                "6.9.3", "6.8.3", "6.7.1", "6.6.1", "6.5.1", "6.4.1", "6.3", "6.2.2", "6.1.1", "6.0.1");
+    }
+
+    private enum GradleDsl {
+        GROOVY(".gradle"),
+        KOTLIN(".gradle.kts");
+
+        private final String fileExtension;
+
+        GradleDsl(String fileExtension) {
+            this.fileExtension = fileExtension;
+        }
+
+        String fileNameFor(String fileNameWithoutExtension) {
+            return fileNameWithoutExtension + fileExtension;
+        }
+
+        @Override
+        public String toString() {
+            return StringUtils.capitalize(name().toLowerCase()) + " DSL";
+        }
+    }
+
+    @Nonnull
+    private static Stream<Arguments> testArguments() {
+        GradleVersion minimumGradleVersion = Objects.requireNonNull(MINIMUM_GRADLE_VERSIONS.get(JavaVersion.current()));
+        return supportedGradleVersions()
+                .filter(gradleVersion -> minimumGradleVersion.compareTo(gradleVersion) <= 0)
+                .flatMap(gradleVersion ->
+                        Arrays.stream(GradleDsl.values()).map(gradleDsl -> Arguments.of(gradleVersion, gradleDsl)));
     }
 
     @Nonnull
@@ -84,21 +128,15 @@ class ApplicationPluginFunctionalTest {
         projectDir = Files.createDirectory(tempDir.resolve(TEST_NAME).toAbsolutePath());
     }
 
-    @ParameterizedTest(name = "Gradle {0}")
-    @MethodSource("gradleVersions")
-    void testProjectUsingGroovyDsl(@Nonnull String gradleVersion) throws IOException {
-        prepareProjectDir("build.gradle");
+    @ParameterizedTest(name = "{0}, {1}")
+    @MethodSource("testArguments")
+    void testPlugin(@Nonnull GradleVersion gradleVersion, @Nonnull GradleDsl gradleDsl) throws IOException {
+        prepareProjectDir(gradleVersion, gradleDsl.fileNameFor("build"));
         executeAndValidate(gradleVersion);
     }
 
-    @ParameterizedTest(name = "Gradle {0}")
-    @MethodSource("gradleVersions")
-    void testProjectUsingKotlinDsl(@Nonnull String gradleVersion) throws IOException {
-        prepareProjectDir("build.gradle.kts");
-        executeAndValidate(gradleVersion);
-    }
-
-    private void prepareProjectDir(@Nonnull String buildFileName) throws IOException {
+    private void prepareProjectDir(@Nonnull GradleVersion gradleVersion, @Nonnull String buildFileName)
+            throws IOException {
         Path testDataDir = Paths.get("test-data", TEST_NAME).toAbsolutePath();
         FileUtils.copyDirectory(testDataDir.toFile(), projectDir.toFile(), FileFilterUtils.or(
                 FileFilterUtils.directoryFileFilter(),
@@ -108,7 +146,10 @@ class ApplicationPluginFunctionalTest {
                 projectDir.resolve("repo"), projectDir.resolve("src"),
                 projectDir.resolve(buildFileName), projectDir.resolve("README.md"));
 
-        String jacocoAgentJvmArg = Utils.nonNull(System.getProperty("testEnv.jacocoAgentJvmArg"), "jacocoAgentJvmArg");
+        // Example input: "-javaagent:.../jacocoagent.jar=destfile=.../test.exec,...,sessionid=abcd1234-test,..."
+        // See: https://www.jacoco.org/jacoco/trunk/doc/agent.html
+        String jacocoAgentJvmArg = Utils.nonNull(System.getProperty("testEnv.jacocoAgentJvmArg"), "jacocoAgentJvmArg")
+                .replaceFirst(",sessionid=[^,]+", "$0-gradle" + gradleVersion.getVersion());
         try (Writer propertiesWriter = new OutputStreamWriter(
                 Files.newOutputStream(projectDir.resolve("gradle.properties")),
                 StandardCharsets.UTF_8)) {
@@ -119,15 +160,15 @@ class ApplicationPluginFunctionalTest {
     }
 
     @Nonnull
-    private GradleRunner makeGradleRunner(@Nonnull String gradleVersion) {
+    private GradleRunner makeGradleRunner(@Nonnull GradleVersion version) {
         GradleRunner runner = GradleRunner.create()
                 .withTestKitDir(testKitDir.toFile())
                 .withProjectDir(projectDir.toFile())
                 .withPluginClasspath();
-        return GRADLE_VERSION_CURRENT.equals(gradleVersion) ? runner : runner.withGradleVersion(gradleVersion);
+        return CURRENT_GRADLE_VERSION.equals(version) ? runner : runner.withGradleVersion(version.getVersion());
     }
 
-    private void executeAndValidate(@Nonnull String gradleVersion) throws IOException {
+    private void executeAndValidate(@Nonnull GradleVersion gradleVersion) throws IOException {
         BuildResult result = makeGradleRunner(gradleVersion)
                 .withArguments("emptyJar",
                         "installDist",
@@ -160,7 +201,8 @@ class ApplicationPluginFunctionalTest {
         executeAndValidateFailIfPropertyEmpty(gradleVersion, "mainClass");
     }
 
-    private void executeAndValidateFailIfPropertyMissing(@Nonnull String gradleVersion, @Nonnull String propertyName) {
+    private void executeAndValidateFailIfPropertyMissing(
+            @Nonnull GradleVersion gradleVersion, @Nonnull String propertyName) {
         String applicationName = "missing" + StringUtils.capitalize(propertyName);
         String errorMessage = executeAndValidateFail(gradleVersion, applicationName);
         Assertions.assertThat(errorMessage).containsPattern("(^|\\s)" +
@@ -176,7 +218,8 @@ class ApplicationPluginFunctionalTest {
                 ")(\\s|$)");
     }
 
-    private void executeAndValidateFailIfPropertyEmpty(@Nonnull String gradleVersion, @Nonnull String propertyName) {
+    private void executeAndValidateFailIfPropertyEmpty(
+            @Nonnull GradleVersion gradleVersion, @Nonnull String propertyName) {
         String applicationName = "empty" + StringUtils.capitalize(propertyName);
         String errorMessage = executeAndValidateFail(gradleVersion, applicationName);
         Assertions.assertThat(errorMessage).containsPattern("(^|\\s)" +
@@ -187,7 +230,7 @@ class ApplicationPluginFunctionalTest {
     }
 
     @Nonnull
-    private String executeAndValidateFail(@Nonnull String gradleVersion, @Nonnull String applicationName) {
+    private String executeAndValidateFail(@Nonnull GradleVersion gradleVersion, @Nonnull String applicationName) {
         String installDistTaskName = "install" + StringUtils.capitalize(applicationName) + "Dist";
         String applicationJarTaskName =
                 ":" + applicationName + StringUtils.capitalize(Application.MAIN_APPLICATION_JAR_TASK_NAME);
@@ -232,8 +275,8 @@ class ApplicationPluginFunctionalTest {
         Assertions.assertThat(appJar).isRegularFile();
         try (ZipFile rawZip = new ZipFile(rawJar.toFile());
                 ZipFile appZip = new ZipFile(appJar.toFile())) {
-            Map<String, ZipEntry> rawZipEntries = zipEntriesToMap(rawZip);
-            Map<String, ZipEntry> appZipEntries = zipEntriesToMap(appZip);
+            Map<String, ZipEntry> rawZipEntries = toImmutableMap(rawZip.stream(), ZipEntry::getName);
+            Map<String, ZipEntry> appZipEntries = toImmutableMap(appZip.stream(), ZipEntry::getName);
             Assertions.assertThat(appZipEntries.keySet()).containsExactlyElementsOf(rawZipEntries.keySet());
 
             for (Map.Entry<String, ZipEntry> rawZipEntry : rawZipEntries.entrySet()) {
@@ -314,7 +357,28 @@ class ApplicationPluginFunctionalTest {
         }
     }
 
-    private void assertIsDirectoryContainingOnly(@Nonnull Path path, @Nonnull Path... expectedPaths) {
+    @Nonnull
+    private static <T, K, V> Map<K, V> toImmutableMap(
+            @Nonnull Stream<T> entries,
+            @Nonnull Function<? super T, ? extends K> keyMapper,
+            @Nonnull Function<? super T, ? extends V> valueMapper) {
+        return Collections.unmodifiableMap(entries.collect(Collectors.toMap(keyMapper, valueMapper)));
+    }
+
+    @Nonnull
+    private static <K, V> Map<K, V> toImmutableMap(
+            @Nonnull Stream<? extends V> entries,
+            @Nonnull Function<? super V, ? extends K> keyExtractor) {
+        return toImmutableMap(entries, keyExtractor, Function.identity());
+    }
+
+    @Nonnull
+    private static String buildClasspath(@Nullable String depDir, @Nonnull String... depPaths) {
+        return depDir == null ? "" :
+                Arrays.stream(depPaths).map(depPath -> depDir + '/' + depPath).collect(Collectors.joining(" "));
+    }
+
+    private static void assertIsDirectoryContainingOnly(@Nonnull Path path, @Nonnull Path... expectedPaths) {
         Assertions.assertThat(path).isDirectory();
         Set<String> expectedNames = Arrays.stream(expectedPaths)
                 .peek(expectedPath -> Preconditions.checkArgument(
@@ -323,16 +387,5 @@ class ApplicationPluginFunctionalTest {
                 .map(String::valueOf)
                 .collect(Collectors.toSet());
         Assertions.assertThat(path.toFile().list()).containsExactlyInAnyOrderElementsOf(expectedNames);
-    }
-
-    @Nonnull
-    private Map<String, ZipEntry> zipEntriesToMap(@Nonnull ZipFile zipFile) {
-        return zipFile.stream().collect(Collectors.toMap(ZipEntry::getName, Function.identity()));
-    }
-
-    @Nonnull
-    private String buildClasspath(@Nullable String depDir, @Nonnull String... depPaths) {
-        return depDir == null ? "" :
-                Arrays.stream(depPaths).map(depPath -> depDir + '/' + depPath).collect(Collectors.joining(" "));
     }
 }

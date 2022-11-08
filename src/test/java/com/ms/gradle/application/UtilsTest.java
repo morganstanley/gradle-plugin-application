@@ -82,8 +82,8 @@ class UtilsTest {
         Assertions.assertThat(Utils.capitalize("3.14")).isEqualTo("3.14");
         Assertions.assertThat(Utils.capitalize("-3.14")).isEqualTo("-3.14");
 
-        Assertions.assertThat(Utils.capitalize("árvíztűrő")).isEqualTo("Árvíztűrő");
-        Assertions.assertThat(Utils.capitalize("Árvíztűrő")).isEqualTo("Árvíztűrő");
+        Assertions.assertThat(Utils.capitalize("árvízTűrő")).isEqualTo("ÁrvízTűrő");
+        Assertions.assertThat(Utils.capitalize("ÁrvízTűrő")).isEqualTo("ÁrvízTűrő");
         Assertions.assertThat(Utils.capitalize("tükörFúróGép")).isEqualTo("TükörFúróGép");
         Assertions.assertThat(Utils.capitalize("TükörFúróGép")).isEqualTo("TükörFúróGép");
         Assertions.assertThat(Utils.capitalize("őrTűz")).isEqualTo("ŐrTűz");

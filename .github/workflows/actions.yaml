@@ -7,6 +7,14 @@ jobs:
     steps:
     - name: Checkout project sources
       uses: actions/checkout@v3
+    - name: Setup Java toolchains
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: |
+          8
+          11
+          17
     - name: Validate Gradle wrapper
       uses: gradle/wrapper-validation-action@v1
     - name: Run Gradle build
