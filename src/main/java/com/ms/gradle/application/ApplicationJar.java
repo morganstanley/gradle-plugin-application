@@ -295,9 +295,12 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
         manifest.getAttributes().clear();
     }
 
-    // Only overridden here to make the `@TaskAction` method visible to tests
+    /**
+     * Executes this task.
+     */
     @Override
     protected void copy() {
+        // Only overridden here to make the `@TaskAction` method visible to tests
         super.copy();
     }
 

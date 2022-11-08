@@ -68,7 +68,7 @@ class ApplicationPluginTest {
     @Nonnull
     private final Project project;
 
-    public ApplicationPluginTest() {
+    ApplicationPluginTest() {
         project = ProjectBuilder.builder().withName(TEST_NAME).build();
         project.getPluginManager().apply(PLUGIN_ID);
     }
