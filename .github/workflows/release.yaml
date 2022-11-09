@@ -27,6 +27,9 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: build publish --info --stacktrace
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
 
       - name: Upload build artifacts
         if: always()
