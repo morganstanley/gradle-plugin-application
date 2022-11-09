@@ -35,6 +35,8 @@ import javax.annotation.Nullable;
 public interface ApplicationSpec {
 
     /**
+     * Returns the project that this {@link ApplicationSpec} belongs to.
+     *
      * @return The project that this {@link ApplicationSpec} belongs to.
      */
     @Internal
@@ -133,7 +135,9 @@ public interface ApplicationSpec {
     }
 
     /**
-     * @return {@link Jar} task whose output to enhance with the application's classpath and main class metadata.
+     * {@link Jar} task whose output to enhance with the application's classpath and main class metadata.
+     *
+     * @return {@link Property} object specifying the application's raw JAR.
      * @see #locateRawJar(SourceSet)
      * @see #fromSourceSet(SourceSet)
      * @see #fromSourceSet(Provider)
@@ -145,8 +149,10 @@ public interface ApplicationSpec {
     Property<Jar> getRawJar();
 
     /**
-     * @return {@link Configuration} to resolve the application's dependencies from. The application's classpath will
-     * consist of the resolved dependency artifact files.
+     * {@link Configuration} to resolve the application's dependencies from. The application's classpath will consist of
+     * the resolved dependency artifact files.
+     *
+     * @return {@link Property} object specifying the application's dependencies.
      * @see #locateDependencies(SourceSet)
      * @see #fromSourceSet(SourceSet)
      * @see #fromSourceSet(Provider)
@@ -157,14 +163,18 @@ public interface ApplicationSpec {
     Property<Configuration> getDependencies();
 
     /**
-     * @return Name of the directory that will contain the application's dependencies.
+     * Name of the directory that will contain the application's dependencies.
+     *
+     * @return {@link Property} object specifying the application's dependency directory name.
      */
     @Input
     @Nonnull
     Property<String> getDependencyDirectoryName();
 
     /**
-     * @return The fully qualified name of the application's main class.
+     * The fully qualified name of the application's main class.
+     *
+     * @return {@link Property} object specifying the application's main class.
      */
     @Input
     @Nonnull

@@ -21,7 +21,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * @see <a href="https://github.com/morganstanley/gradle-plugin-application">Morgan Stanley's Application plugin</a>
+ * Gradle {@link Plugin} class that implements
+ * <a href="https://github.com/morganstanley/gradle-plugin-application">Morgan Stanley's Application plugin</a>.
  */
 public class ApplicationPlugin implements Plugin<Project> {
 
@@ -32,7 +33,7 @@ public class ApplicationPlugin implements Plugin<Project> {
 
     /**
      * <p>Name of the project extension ({@link Application} container) that this plugin provides.</p>
-     * <p>Usage: {@code project.getExtensions().getByName(ApplicationPlugin.EXTENSION_NAME)}.</p>
+     * <p>Usage: {@code project.getExtensions().getByName(ApplicationPlugin.EXTENSION_NAME)}</p>
      *
      * @see #getApplications()
      * @see #EXTENSION_TYPE
@@ -41,7 +42,7 @@ public class ApplicationPlugin implements Plugin<Project> {
 
     /**
      * <p>Type of the project extension ({@link Application} container) that this plugin provides.</p>
-     * <p>Usage: {@code project.getExtensions().getByType(ApplicationPlugin.EXTENSION_TYPE)}.</p>
+     * <p>Usage: {@code project.getExtensions().getByType(ApplicationPlugin.EXTENSION_TYPE)}</p>
      *
      * @see #getApplications()
      * @see #EXTENSION_NAME
@@ -52,6 +53,11 @@ public class ApplicationPlugin implements Plugin<Project> {
     @Nullable
     private NamedDomainObjectContainer<Application> applications;
 
+    /**
+     * Apply this plugin to the given project.
+     *
+     * @param project The project to apply this plugin to.
+     */
     @Override
     public void apply(@Nonnull Project project) {
         if (this.applications != null) {
@@ -86,7 +92,7 @@ public class ApplicationPlugin implements Plugin<Project> {
 
     /**
      * <p>This method allows type-safe programmatic access to the {@link Application} container used by this plugin.</p>
-     * <p>Usage: {@code project.getPlugins().getPlugin(ApplicationPlugin.class).getApplications()}.</p>
+     * <p>Usage: {@code project.getPlugins().getPlugin(ApplicationPlugin.class).getApplications()}</p>
      *
      * @return The {@link Application} container used by this plugin.
      * @see #EXTENSION_NAME

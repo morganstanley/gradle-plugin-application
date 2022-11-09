@@ -461,8 +461,10 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
         }
 
         /**
-         * @return Relative path to copy the artifact file of this dependency to (within the application's
+         * Returns the relative path to copy the artifact file of this dependency to (within the application's
          * {@linkplain ApplicationJar#getDependencyDirectoryName dependency directory}).
+         *
+         * @return Relative path to copy the artifact file of this dependency to.
          */
         @Nonnull
         public RelativePath getRelativePath() {
@@ -474,6 +476,8 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
         }
 
         /**
+         * Returns the relative URL to use as the classpath entry for this dependency.
+         *
          * @param dependencyDirectoryName Name of the
          * {@linkplain ApplicationJar#getDependencyDirectoryName dependency directory}. Must not be null or empty.
          * @return Relative URL to use as the classpath entry for this dependency.
