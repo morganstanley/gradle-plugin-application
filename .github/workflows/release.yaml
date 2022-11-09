@@ -1,8 +1,10 @@
-name: Build project
-on: push
+name: Publish release
+on:
+  release:
+    types: [ released ]
 jobs:
   build:
-    name: Build project
+    name: Publish release
     runs-on: ubuntu-latest
     steps:
 
@@ -21,10 +23,10 @@ jobs:
       - name: Validate Gradle wrapper
         uses: gradle/wrapper-validation-action@v1
 
-      - name: Run Gradle build
+      - name: Run Gradle build and publish artifacts
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: build --info --stacktrace
+          arguments: build publish --info --stacktrace
 
       - name: Upload build artifacts
         if: always()
@@ -34,3 +36,12 @@ jobs:
           path: |
             build/libs/
             build/reports/
+            build/local-publish/
+
+      - name: Publish docs
+        uses: crazy-max/ghaction-github-pages@v3
+        with:
+          build_dir: build/docs/javadoc/
+          jekyll: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

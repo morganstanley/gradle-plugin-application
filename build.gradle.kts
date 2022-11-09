@@ -46,7 +46,7 @@ version = "2.0.0"
 
 val pluginId = "com.ms.gradle.application"
 val pluginClass = "com.ms.gradle.application.ApplicationPlugin"
-require(pluginId == "${project.group}.${project.name}") { "Inconsistent naming: pluginId" }
+require(pluginId == "${project.group}.${project.name}".replace("-", "")) { "Inconsistent naming: pluginId" }
 require(pluginClass == "${pluginId}.${project.name.capitalize()}Plugin") { "Inconsistent naming: pluginClass" }
 
 val productVendor = "Morgan Stanley"
