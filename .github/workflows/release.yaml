@@ -2,6 +2,8 @@ name: Publish release
 on:
   release:
     types: [ released ]
+permissions:
+  contents: write
 jobs:
   build:
     name: Publish release
@@ -27,9 +29,6 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: build publish --info --stacktrace
-        env:
-          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
-          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
 
       - name: Upload build artifacts
         if: always()
@@ -48,3 +47,11 @@ jobs:
           jekyll: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Gradle Plugin Portal
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: publishPlugins --info --stacktrace
+        env:
+          GRADLE_PUBLISH_KEY: ${{ secrets.GRADLE_PUBLISH_KEY }}
+          GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}

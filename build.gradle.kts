@@ -32,6 +32,7 @@ tasks.wrapper {
 // --- ========== ---
 
 plugins {
+    `java-library`
     `java-gradle-plugin`
     `maven-publish`
     id("com.gradle.plugin-publish").version("1.0.0")
@@ -301,6 +302,10 @@ tasks.validatePlugins {
     enableStricterValidation.set(true)
     ignoreFailures.set(false)
     failOnWarning.set(true)
+}
+
+publishing {
+    repositories.maven(layout.buildDirectory.dir("local-publish"))
 }
 
 tasks.publishPlugins {

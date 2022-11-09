@@ -1,5 +1,7 @@
 name: Build project
 on: push
+permissions:
+  contents: read
 jobs:
   build:
     name: Build project
