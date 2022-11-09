@@ -1,8 +1,11 @@
 # Application plugin for Gradle
 
-![Lifecycle Active](https://badgen.net/badge/Lifecycle/Active/green) 
+[![Lifecycle](https://img.shields.io/badge/Lifecycle-Active-green)](#application-plugin-for-gradle)
+[![Build Status](https://github.com/morganstanley/gradle-plugin-application/actions/workflows/push.yaml/badge.svg?branch=main)](https://github.com/morganstanley/gradle-plugin-application/actions/workflows/push.yaml?query=branch:main)
+[![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v.svg?label=Gradle+Plugin+Portal&metadataUrl=https://plugins.gradle.org/m2/com/ms/gradle/application/com.ms.gradle.application.gradle.plugin/maven-metadata.xml)](https://plugins.gradle.org/plugin/com.ms.gradle.application)
+[![JavaDoc](https://img.shields.io/badge/JavaDoc-latest-blue)](http://opensource.morganstanley.com/gradle-plugin-application)
 
-[Morgan Stanley](https://github.com/MorganStanley)'s Application plugin for Gradle allows you to package your Java-based application for distribution, much like [Gradle's built-in Application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) does, but in a more standard and more flexible way.
+[Morgan Stanley](https://github.com/morganstanley)'s Application plugin for Gradle allows you to package your Java-based applications for distribution, much like [Gradle's built-in Application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) does, but in a more standard and more flexible way.
 
 The fundamental difference between the two is how the application gets packaged: while Gradle's built-in plugin generates a start script that can run the correct `java -cp myApp.jar:... my.app.Main` command for the user, this plugin goes back to the Java standard ways for packaging applications, and generates an application JAR that the user can simply execute via the command `java -jar myApp.jar`.
 
@@ -100,9 +103,9 @@ All you need to set yourself is the `mainClass` property, and you're good to go!
 
 ### Configuring applications
 
-* The plugin provides a number of settings to customize each application that gets built. For the available options, please refer to the Javadoc of the `Application` class.
+* The plugin provides a number of settings to customize each application that gets built. For the available options, please refer to the [Javadoc of the `Application` class](http://opensource.morganstanley.com/gradle-plugin-application/com/ms/gradle/application/Application.html).
 * If you need to build multiple applications, you can simply use the `applications` container to set them up.
 
 ## Credits
 
-This plugin was written by [Denes Daniel](https://github.com/PantherDD), working for [Morgan Stanley](https://github.com/MorganStanley)'s Java Platform Engineering team.
+This plugin was written by [Denes Daniel](https://github.com/pantherdd), working for [Morgan Stanley](https://github.com/morganstanley)'s Java Platform Engineering team.
