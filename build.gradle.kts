@@ -113,6 +113,9 @@ val manifestAttributes by lazy {
 
 java {
     toolchain(toolchainSpec(toolsJavaVersion))
+    // Not really used by Gradle, only added for better IDE integration
+    sourceCompatibility = sourceJavaVersion
+
     // If we call these here, `PublishPlugin.forceJavadocAndSourcesJars` will throw an exception when it does the same
     //withJavadocJar()
     //withSourcesJar()
@@ -224,8 +227,8 @@ pmd {
 }
 
 tasks.withType<SpotBugsTask> {
-    reports.register("html");
-    reports.register("xml");
+    reports.register("html")
+    reports.register("xml")
 }
 
 tasks.withType<Test> {

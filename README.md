@@ -2,7 +2,7 @@
 
 ![Lifecycle Active](https://badgen.net/badge/Lifecycle/Active/green) 
 
-[Morgan Stanley](https://github.com/MorganStanley)'s Application plugin for Gradle allows you to package your Java-based application for distribution, much like [Gradle's built-in Application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) does, but in a more standard and more flexible way.
+[Morgan Stanley](https://github.com/morganstanley)'s Application plugin for Gradle allows you to package your Java-based application for distribution, much like [Gradle's built-in Application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) does, but in a more standard and more flexible way.
 
 The fundamental difference between the two is how the application gets packaged: while Gradle's built-in plugin generates a start script that can run the correct `java -cp myApp.jar:... my.app.Main` command for the user, this plugin goes back to the Java standard ways for packaging applications, and generates an application JAR that the user can simply execute via the command `java -jar myApp.jar`.
 
@@ -105,4 +105,4 @@ All you need to set yourself is the `mainClass` property, and you're good to go!
 
 ## Credits
 
-This plugin was written by [Denes Daniel](https://github.com/PantherDD), working for [Morgan Stanley](https://github.com/MorganStanley)'s Java Platform Engineering team.
+This plugin was written by [Denes Daniel](https://github.com/pantherdd), working for [Morgan Stanley](https://github.com/morganstanley)'s Java Platform Engineering team.
