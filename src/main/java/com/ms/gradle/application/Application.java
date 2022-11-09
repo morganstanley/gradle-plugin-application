@@ -271,7 +271,7 @@ public abstract class Application implements ApplicationSpec, Named {
 
     /**
      * @return The {@link Configuration} for the application, representing its runtime elements
-     * ({@link #getApplicationJar application JAR} artifact and its {@link #getDependencies dependencies}).
+     * ({@linkplain #getApplicationJar application JAR} artifact and its {@linkplain #getDependencies dependencies}).
      * @see #getApplicationJar() applicationJar
      * @see #getDependencies() dependencies
      */

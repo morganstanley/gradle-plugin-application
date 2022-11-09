@@ -42,10 +42,10 @@ public interface ApplicationSpec {
     Project getProject();
 
     /**
-     * Locates the {@link #getRawJar raw JAR} task associated with the given {@link SourceSet}.
+     * Locates the {@linkplain #getRawJar raw JAR} task associated with the given {@link SourceSet}.
      *
-     * @param sourceSet The {@link SourceSet} whose {@link #getRawJar raw JAR} task to locate.
-     * @return The {@link SourceSet#getJarTaskName Jar} task of the given {@link SourceSet}.
+     * @param sourceSet The {@link SourceSet} whose {@linkplain #getRawJar raw JAR} task to locate.
+     * @return The {@linkplain SourceSet#getJarTaskName JAR} task of the given {@link SourceSet}.
      * @see #locateRawJar(Provider)
      */
     @Nonnull
@@ -56,10 +56,10 @@ public interface ApplicationSpec {
     }
 
     /**
-     * Locates the {@link #getRawJar raw JAR} task associated with the given {@link SourceSet}.
+     * Locates the {@linkplain #getRawJar raw JAR} task associated with the given {@link SourceSet}.
      *
-     * @param sourceSet The {@link SourceSet} whose {@link #getRawJar raw JAR} task to locate.
-     * @return The {@link SourceSet#getJarTaskName Jar} task of the given {@link SourceSet}.
+     * @param sourceSet The {@link SourceSet} whose {@linkplain #getRawJar raw JAR} task to locate.
+     * @return The {@linkplain SourceSet#getJarTaskName JAR} task of the given {@link SourceSet}.
      * @see #locateRawJar(SourceSet)
      */
     @Nonnull
@@ -68,11 +68,11 @@ public interface ApplicationSpec {
     }
 
     /**
-     * Locates the {@link #getDependencies dependencies} configuration associated with the given {@link SourceSet}.
+     * Locates the {@linkplain #getDependencies dependencies} configuration associated with the given {@link SourceSet}.
      *
-     * @param sourceSet The {@link SourceSet} whose {@link #getDependencies dependencies} configuration to locate.
-     * @return The {@link SourceSet#getRuntimeClasspathConfigurationName runtime classpath} configuration of the given
-     * {@link SourceSet}.
+     * @param sourceSet The {@link SourceSet} whose {@linkplain #getDependencies dependencies} configuration to locate.
+     * @return The {@linkplain SourceSet#getRuntimeClasspathConfigurationName runtime classpath} configuration of the
+     * given {@link SourceSet}.
      * @see #locateDependencies(Provider)
      */
     @Nonnull
@@ -83,11 +83,11 @@ public interface ApplicationSpec {
     }
 
     /**
-     * Locates the {@link #getDependencies dependencies} configuration associated with the given {@link SourceSet}.
+     * Locates the {@linkplain #getDependencies dependencies} configuration associated with the given {@link SourceSet}.
      *
-     * @param sourceSet The {@link SourceSet} whose {@link #getDependencies dependencies} configuration to locate.
-     * @return The {@link SourceSet#getRuntimeClasspathConfigurationName runtime classpath} configuration of the given
-     * {@link SourceSet}.
+     * @param sourceSet The {@link SourceSet} whose {@linkplain #getDependencies dependencies} configuration to locate.
+     * @return The {@linkplain SourceSet#getRuntimeClasspathConfigurationName runtime classpath} configuration of the
+     * given {@link SourceSet}.
      * @see #locateDependencies(SourceSet)
      */
     @Nonnull
@@ -120,8 +120,8 @@ public interface ApplicationSpec {
      * <p>Configures the application to build from a {@link SourceSet}.</p>
      * <p>Calling this method is equivalent to setting the following properties:</p>
      * <ul>
-     * <li>{@link #getRawJar rawJar} {@code =} {@link #locateRawJar(SourceSet)}</li>
-     * <li>{@link #getDependencies dependencies} {@code =} {@link #locateDependencies(SourceSet)}</li>
+     * <li>{@link #getRawJar rawJar} {@code =} {@link #locateRawJar(Provider)}</li>
+     * <li>{@link #getDependencies dependencies} {@code =} {@link #locateDependencies(Provider)}</li>
      * </ul>
      *
      * @param sourceSet The {@link SourceSet} to build the application from.

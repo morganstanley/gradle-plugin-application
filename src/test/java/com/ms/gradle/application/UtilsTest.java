@@ -15,6 +15,9 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 
+/**
+ * Unit tests for {@link Utils}.
+ */
 @SuppressWarnings({"ConstantConditions", "ObviousNullCheck"})
 class UtilsTest {
 

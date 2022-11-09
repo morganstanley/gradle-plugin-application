@@ -99,7 +99,7 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
 
     /**
      * <p><b>IMPORTANT:</b> Wherever we query the value of this property, we should add a no-op {@link Provider#orElse}
-     * fallback, so that if the user forgets to set the property, Gradle can still reach the input validation step and
+     * fallback, so that if the user leaves the property empty, Gradle can still reach the input validation step and
      * show them a clear and helpful error message.</p>
      *
      * @return The {@link #getDependencyDirectoryName dependencyDirectoryName} property presented as a provider that
@@ -112,7 +112,7 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
 
     /**
      * <p><b>IMPORTANT:</b> Wherever we query the value of this property, we should add a no-op {@link Provider#orElse}
-     * fallback, so that if the user forgets to set the property, Gradle can still reach the input validation step and
+     * fallback, so that if the user leaves the property empty, Gradle can still reach the input validation step and
      * show them a clear and helpful error message.</p>
      *
      * @return The {@link #getMainClass mainClass} property presented as a provider that finalizes the underlying
@@ -137,10 +137,10 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
 
     /**
      * <p>The application's dependencies in the format needed by this task. This is a read-only {@link Property} that
-     * {@link Configuration#getResolvedConfiguration resolves} the application's {@link #getDependencies dependencies}
-     * when queried, and returns a map that lists the dependency artifact files in classpath order along with their
-     * respective {@link Dependency Dependency} objects. Using a {@link Provider} would make more sense semantically,
-     * but a {@link Property} allows us to memoize the result.</p>
+     * {@linkplain Configuration#getResolvedConfiguration resolves} the {@link #getDependencies dependencies}
+     * configuration when queried, and returns a map that lists the dependency artifact files in classpath order along
+     * with their respective {@link Dependency Dependency} objects. Using a {@link Provider} would make more sense
+     * semantically, but a {@link Property} allows us to memoize the result.</p>
      */
     @Nonnull
     private final MapProperty<File, Dependency> resolvedDependencies;
@@ -200,11 +200,11 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
     }
 
     /**
-     * Configures the default location and name of the {@link #getArchiveFile archive file} created by this task.
+     * Configures the default location and name of the {@linkplain #getArchiveFile archive file} created by this task.
      * Unfortunately if we do this in the constructor, where it logically belongs, our settings will be overridden by
-     * the {@link TaskCollection#configureEach action} registered in {@link BasePlugin#configureArchiveDefaults}. To
-     * counter this, {@link ApplicationPlugin#apply} registers a follow-up {@link TaskCollection#configureEach action}
-     * that will call this method one more time, re-applying our own defaults.
+     * the {@linkplain TaskCollection#configureEach action} registered in {@link BasePlugin#configureArchiveDefaults}.
+     * To counter this, {@link ApplicationPlugin#apply} adds its own {@linkplain TaskCollection#configureEach action}
+     * that will subsequently call this method one more time, re-applying our defaults.
      *
      * @see #getArchiveFile()
      * @see #getDestinationDirectory()
@@ -248,8 +248,7 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
     private void configureEnhanceRawJarManifest() {
         // Build classpath string
         Provider<String> classpath = resolvedDependencies().map(resolvedDependencies -> {
-            String dependencyDirectoryName = Utils.nonEmpty(
-                    dependencyDirectoryName().getOrElse(DEPENDENCY_DIRECTORY_NAME), "dependencyDirectoryName");
+            String dependencyDirectoryName = dependencyDirectoryName().getOrElse(DEPENDENCY_DIRECTORY_NAME);
             return resolvedDependencies.values().stream()
                     .map(dependency -> dependency.getClasspathEntry(dependencyDirectoryName))
                     .collect(Collectors.joining(" "));
@@ -315,9 +314,9 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
      * destination paths of dependency artifact files are generated lazily using an {@link CopySpec#eachFile eachFile}
      * action. Since these actions are executed in the order they were registered in, if a custom one gets added to the
      * {@link CopySpec} returned by this method, it will have access to the final destination paths. However, if the
-     * returned {@link CopySpec} itself gets added to another one as a {@link CopySpec#with child spec}, and the parent
-     * spec has an {@link CopySpec#eachFile eachFile} action of its own, that will <i>not</i> see the final destination
-     * paths yet, because Gradle executes actions registered on the parent spec before those on the child spec.</p>
+     * returned {@link CopySpec} itself gets added to another one as a {@linkplain CopySpec#with child spec}, and the
+     * parent spec has an {@link CopySpec#eachFile eachFile} action of its own, that will <i>not</i> see the final
+     * destination paths, because Gradle executes actions registered on the parent spec before those on the child.</p>
      * <p>As a general rule, avoid changing the destination paths or excluding files, because doing so may result in
      * missing dependencies at runtime, causing the application to throw exceptions such as {@link NoClassDefFoundError}
      * or {@link ClassNotFoundException}.</p>
@@ -463,7 +462,7 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
 
         /**
          * @return Relative path to copy the artifact file of this dependency to (within the application's
-         * {@link ApplicationJar#getDependencyDirectoryName dependency directory}).
+         * {@linkplain ApplicationJar#getDependencyDirectoryName dependency directory}).
          */
         @Nonnull
         public RelativePath getRelativePath() {
@@ -475,14 +474,14 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
         }
 
         /**
-         * @param dependencyDirectoryName Name of the {@link ApplicationJar#getDependencyDirectoryName dependency
-         * directory}. Must not be null or empty.
+         * @param dependencyDirectoryName Name of the
+         * {@linkplain ApplicationJar#getDependencyDirectoryName dependency directory}. Must not be null or empty.
          * @return Relative URL to use as the classpath entry for this dependency.
          * @see <a href="https://docs.oracle.com/javase/8/docs/technotes/guides/jar/jar.html#classpath">Class-Path</a>
          */
         @Nonnull
         public String getClasspathEntry(@Nonnull String dependencyDirectoryName) {
-            Path filePath = BASE_PATH.resolve(dependencyDirectoryName);
+            Path filePath = BASE_PATH.resolve(Utils.nonEmpty(dependencyDirectoryName, "dependencyDirectoryName"));
             if (group != null) {
                 filePath = filePath.resolve(group);
             }
@@ -507,10 +506,10 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
          * Constructor. All underlying manifests have to be specified here, but apart from {@code visibleManifest}, they
          * won't be used until later. Merge behavior (when {@link #getEffectiveManifest} is called):
          * <ol>
-         * <li>generate an empty {@link Manifest},</li>
-         * <li>resolve and merge in all {@code baseManifests} in order,</li>
-         * <li>merge in {@code visibleManifest},</li>
-         * <li>call {@link #getEffectiveManifest} on the result.</li>
+         * <li>Create an empty {@link Manifest},</li>
+         * <li>Resolve and merge in all {@code baseManifests} in order,</li>
+         * <li>Merge in {@code visibleManifest},</li>
+         * <li>Call {@link #getEffectiveManifest} on the result.</li>
          * </ol>
          * Entries from latter manifests will overwrite matching ones from former manifests.
          *
