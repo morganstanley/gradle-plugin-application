@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 
 /**
- * An {@link Application} is a specification for building a runnable JAR (i.e. one that {@code java -jar} is able to
+ * An {@link Application} is a specification for building a runnable JAR (meaning one that {@code java -jar} is able to
  * execute directly). Based on the specification, Gradle will make an exact copy of an existing {@link Jar} task's
  * output, add the necessary attributes to the copy's {@link Manifest}, and set up a {@link Distribution} to bundle this
  * enhanced JAR with its dependencies.
@@ -120,6 +120,8 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
+     * Returns the default base name of this application.
+     *
      * @return The default base name of this application.
      * @see #getApplicationBaseName()
      */
@@ -198,6 +200,8 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
+     * Returns the project this application belongs to.
+     *
      * @return The project this application belongs to.
      */
     @Nonnull
@@ -208,6 +212,8 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
+     * Returns the name of this application.
+     *
      * @return The name of this application.
      */
     @Nonnull
@@ -217,7 +223,9 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
-     * @return The display name of this {@link Application} that can be used in log and error messages.
+     * Returns the display name of this {@link Application} that can be used in log and error messages.
+     *
+     * @return The display name of this {@link Application}.
      */
     @Nonnull
     @Override
@@ -226,7 +234,9 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
-     * @return The description of the application (for informational purposes).
+     * Returns the description of the application (for informational purposes).
+     *
+     * @return The description of the application.
      */
     @Nullable
     public String getDescription() {
@@ -234,25 +244,31 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
-     * @param description The description of the application (for informational purposes).
+     * Sets the description of the application (for informational purposes).
+     *
+     * @param description The description of the application.
      */
     public void setDescription(@Nullable String description) {
         this.description = description;
     }
 
     /**
-     * @return The base name of this application, used in naming the application JAR and the distribution archives. The
-     * default value is as follows:
+     * <p>The base name of this application, used in naming the application JAR and the distribution archives.</p>
+     * <p>The default value is as follows:</p>
      * <ul>
-     * <li>For the main application, it is "{@code $project.name}".</li>
-     * <li>For other applications, it is "{@code $project.name-$this.name}".</li>
+     * <li>For the main application, it is {@code "${project.name}"}.</li>
+     * <li>For other applications, it is {@code "${project.name}-${this.name}"}.</li>
      * </ul>
+     *
+     * @return {@link Property} object specifying the application's base name.
      * @see Distribution#getDistributionBaseName()
      */
     @Nonnull
     public abstract Property<String> getApplicationBaseName();
 
     /**
+     * Returns the {@link ApplicationJar} for the application.
+     *
      * @return The {@link ApplicationJar} for the application.
      */
     @Nonnull
@@ -270,8 +286,10 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
-     * @return The {@link Configuration} for the application, representing its runtime elements
-     * ({@link #getApplicationJar application JAR} artifact and its {@link #getDependencies dependencies}).
+     * Returns the {@link Configuration} for the application, representing its runtime elements
+     * ({@linkplain #getApplicationJar application JAR} artifact and its {@linkplain #getDependencies dependencies}).
+     *
+     * @return The {@link Configuration} for the application.
      * @see #getApplicationJar() applicationJar
      * @see #getDependencies() dependencies
      */
@@ -290,6 +308,8 @@ public abstract class Application implements ApplicationSpec, Named {
     }
 
     /**
+     * Returns the {@link Distribution} for the application.
+     *
      * @return The {@link Distribution} for the application.
      */
     @Nonnull

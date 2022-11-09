@@ -313,6 +313,9 @@ References:
       <property name="offset" value="0"/>
       <property name="violateExecutionOnNonTightHtml" value="true"/>
     </module>
+    <module name="SummaryJavadoc">
+      <property name="violateExecutionOnNonTightHtml" value="true"/>
+    </module>
     <module name="JavadocParagraph">
       <property name="violateExecutionOnNonTightHtml" value="true"/>
     </module>
