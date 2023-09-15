@@ -187,11 +187,14 @@ tasks.javadoc {
                 .withArtifacts(JvmLibrary::class, JavadocArtifact::class)
                 .execute()
             compileJavadocs.resolvedComponents.mapNotNull { component ->
-                val javadocArtifact = component.getArtifacts(JavadocArtifact::class).single() as ResolvedArtifactResult
-                val javadocJarTree = zipTree(javadocArtifact.file)
-                val javadocDescriptor = descriptorFileNames.mapNotNull { fileName ->
-                    javadocJarTree.matching { include(fileName) }.singleOrNull()
-                }.firstOrNull()
+                val javadocArtifact =
+                    component.getArtifacts(JavadocArtifact::class).singleOrNull() as ResolvedArtifactResult?
+                val javadocDescriptor = javadocArtifact?.let { artifact ->
+                    val javadocJarTree = zipTree(artifact.file)
+                    descriptorFileNames.firstNotNullOfOrNull { fileName ->
+                        javadocJarTree.matching { include(fileName) }.singleOrNull()
+                    }
+                }
                 javadocDescriptor?.let { file ->
                     val id = component.id as ModuleComponentIdentifier
                     OfflineLink(file.parentFile, uri("https://javadoc.io/doc/${id.group}/${id.module}/${id.version}/"))
