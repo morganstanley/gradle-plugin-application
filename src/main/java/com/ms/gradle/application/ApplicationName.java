@@ -11,6 +11,7 @@ import org.gradle.api.attributes.TestSuiteName;
  *
  * @see TestSuiteName
  */
+@SuppressWarnings("PMD.ConstantsInInterface") // This approach is consistent with the rest of Gradle
 public interface ApplicationName extends Named {
     Attribute<ApplicationName> APPLICATION_NAME_ATTRIBUTE =
             Attribute.of("com.ms.gradle.application.name", ApplicationName.class);

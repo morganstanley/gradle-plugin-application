@@ -131,6 +131,7 @@ class ApplicationPluginFunctionalTest {
 
     @ParameterizedTest(name = "{0}, {1}")
     @MethodSource("testArguments")
+    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert") // Delegating to other methods asserting a lot of things
     void testPlugin(@Nonnull GradleVersion gradleVersion, @Nonnull GradleDsl gradleDsl) throws IOException {
         prepareProjectDir(gradleVersion, gradleDsl.fileNameFor("build"));
         executeAndValidate(gradleVersion);
