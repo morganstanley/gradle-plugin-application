@@ -78,8 +78,9 @@ class ApplicationPluginFunctionalTest {
     // See: https://gradle.org/releases/
     @Nonnull
     private static Stream<GradleVersion> supportedGradleVersions() {
-        return gradleVersions(CURRENT_GRADLE_VERSION, "7.4.2", "7.3.3", "7.2", "7.1.1", "7.0.2",
-                "6.9.3", "6.8.3", "6.7.1", "6.6.1", "6.5.1", "6.4.1", "6.3", "6.2.2", "6.1.1", "6.0.1");
+        return gradleVersions(CURRENT_GRADLE_VERSION, "8.2.1", "8.1.1", "8.0.2",
+                "7.6.2", "7.5.1", "7.4.2", "7.3.3", "7.2", "7.1.1", "7.0.2",
+                "6.9.4", "6.8.3", "6.7.1", "6.6.1", "6.5.1", "6.4.1", "6.3", "6.2.2", "6.1.1", "6.0.1");
     }
 
     private enum GradleDsl {

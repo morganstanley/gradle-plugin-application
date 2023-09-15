@@ -26,29 +26,30 @@ buildscript {
 tasks.wrapper {
     // When new Gradle versions become available, update `ApplicationPluginFunctionalTest.supportedGradleVersions` too
     // See: https://gradle.org/releases/
-    gradleVersion = "7.5.1"
+    gradleVersion = "8.3"
     distributionType = Wrapper.DistributionType.ALL
 }
 // --- ========== ---
 
 plugins {
-    `java-library`
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish").version("1.0.0")
+    id("com.gradle.plugin-publish").version("1.2.1")
     checkstyle
     pmd
-    id("com.github.spotbugs").version("5.0.13")
+    id("com.github.spotbugs").version("5.1.3")
     jacoco
 }
 
 group = "com.ms.gradle"
-version = "2.0.0"
+version = "2.0.1"
 
 val pluginId = "com.ms.gradle.application"
 val pluginClass = "com.ms.gradle.application.ApplicationPlugin"
-require(pluginId == "${project.group}.${project.name}".replace("-", "")) { "Inconsistent naming: pluginId" }
-require(pluginClass == "${pluginId}.${project.name.capitalize()}Plugin") { "Inconsistent naming: pluginClass" }
+fun toPackageName(str: String) = str.replace("-", "")
+fun toClassName(str: String) = str.replace(Regex("(^|-).")) { it.value.last().titlecase() }
+require(pluginId == "${project.group}.${project.name}") { "Inconsistent pluginId" }
+require(pluginClass == "${toPackageName(pluginId)}.${toClassName(project.name)}Plugin") { "Inconsistent pluginClass" }
 
 val productVendor = "Morgan Stanley"
 val productTitle = "Application plugin for Gradle"
@@ -84,18 +85,15 @@ val gitStatus = try {
 }
 
 gradlePlugin {
+    website.set(productUrl)
+    vcsUrl.set("${productUrl}.git")
     plugins.create(project.name) {
         id = pluginId
         implementationClass = pluginClass
         displayName = productTitle
         description = productDescription
+        tags.set(productTags)
     }
-}
-
-pluginBundle {
-    website = productUrl
-    vcsUrl = productUrl
-    pluginTags = mapOf(project.name to productTags)
 }
 
 val manifestAttributes by lazy {
@@ -218,7 +216,7 @@ tasks.withType<Jar> {
 }
 
 checkstyle {
-    toolVersion = "10.4"
+    toolVersion = "10.12.3"
     maxErrors = 0
     maxWarnings = 0
 }
@@ -236,6 +234,8 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 supportedJavaVersions.forEach { javaVersion ->
+    // Unfortunately we need to realize the tasks so that we can call `JacocoReportBase.executionData(Task)` below
+    // See: https://github.com/gradle/gradle/issues/8794
     val testTask =
         if (javaVersion == sourceJavaVersion) tasks.test.get()
         else tasks.create<Test>("testOnJava${javaVersion.majorVersion}")
