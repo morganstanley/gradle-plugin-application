@@ -114,10 +114,8 @@ java {
     toolchain(toolchainSpec(toolsJavaVersion))
     // Not really used by Gradle, only added for better IDE integration
     sourceCompatibility = sourceJavaVersion
-
-    // If we call these here, `PublishPlugin.forceJavadocAndSourcesJars` will throw an exception when it does the same
-    //withJavadocJar()
-    //withSourcesJar()
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
