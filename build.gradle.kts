@@ -15,7 +15,9 @@ import org.eclipse.jgit.lib.RepositoryBuilder
 import java.io.Serializable
 import java.net.HttpURLConnection
 import java.net.URI
+import java.nio.channels.FileChannel
 import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 
 buildscript {
     dependencies {
@@ -278,7 +280,7 @@ supportedJavaVersions.forEach { javaVersion ->
             fun group(index: Int) = groups[index]!!.value
             group(1) + absolutePath(group(2)) + group(3) + group(4) + absolutePath(group(5)) + group(6)
         })
-        // Wait for the execution data output file to be released by TestKit JVMs, even when some tests fail
+        // Wait for the execution data output file to be released by TestKit JVMs (even when some tests fail)
         addTestListener(object : TestListener {
             override fun beforeSuite(suite: TestDescriptor) {}
             override fun beforeTest(testDescriptor: TestDescriptor) {}
@@ -286,16 +288,9 @@ supportedJavaVersions.forEach { javaVersion ->
             override fun afterSuite(suite: TestDescriptor, result: TestResult) {
                 // Do this only at the end of the whole `Test` task (see `AbstractTestTask.afterSuite` docs)
                 if (suite.parent == null) {
-                    fun isLocked(file: File) = file.exists() && !file.renameTo(file)
                     val executionData = testJacoco.destinationFile!!
-                    for (count in 20 downTo 0) {
-                        if (!isLocked(executionData)) {
-                            break
-                        } else if (count > 0) {
-                            Thread.sleep(500)
-                        } else {
-                            logger.error("${suite} keeps JaCoCo execution data file locked: ${executionData}")
-                        }
+                    FileChannel.open(executionData.toPath(), StandardOpenOption.READ).use {
+                        it.lock(0L, Long.MAX_VALUE, true).release()
                     }
                 }
             }
