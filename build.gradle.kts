@@ -12,13 +12,16 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.RepositoryBuilder
+import java.io.Serializable
 import java.net.HttpURLConnection
 import java.net.URI
+import java.nio.channels.FileChannel
 import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 
 buildscript {
     dependencies {
-        classpath("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
+        classpath("org.eclipse.jgit:org.eclipse.jgit:6.7.0.202309050840-r")
     }
 }
 
@@ -26,29 +29,30 @@ buildscript {
 tasks.wrapper {
     // When new Gradle versions become available, update `ApplicationPluginFunctionalTest.supportedGradleVersions` too
     // See: https://gradle.org/releases/
-    gradleVersion = "7.5.1"
+    gradleVersion = "8.4"
     distributionType = Wrapper.DistributionType.ALL
 }
 // --- ========== ---
 
 plugins {
-    `java-library`
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish").version("1.0.0")
+    id("com.gradle.plugin-publish").version("1.2.1")
     checkstyle
     pmd
-    id("com.github.spotbugs").version("5.0.13")
+    id("com.github.spotbugs").version("5.2.3")
     jacoco
 }
 
 group = "com.ms.gradle"
-version = "2.0.0"
+version = "2.0.1"
 
 val pluginId = "com.ms.gradle.application"
 val pluginClass = "com.ms.gradle.application.ApplicationPlugin"
-require(pluginId == "${project.group}.${project.name}".replace("-", "")) { "Inconsistent naming: pluginId" }
-require(pluginClass == "${pluginId}.${project.name.capitalize()}Plugin") { "Inconsistent naming: pluginClass" }
+fun toPackageName(str: String) = str.replace("-", "")
+fun toClassName(str: String) = str.replace(Regex("(^|-).")) { it.value.last().titlecase() }
+require(pluginId == "${project.group}.${project.name}") { "Inconsistent pluginId" }
+require(pluginClass == "${toPackageName(pluginId)}.${toClassName(project.name)}Plugin") { "Inconsistent pluginClass" }
 
 val productVendor = "Morgan Stanley"
 val productTitle = "Application plugin for Gradle"
@@ -67,8 +71,9 @@ fun toolchainSpec(javaVersion: JavaVersion) = { toolchain: JavaToolchainSpec ->
     toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion.majorVersion))
 }
 
-fun <T> queryGit(query: (Git) -> T): T =
-    RepositoryBuilder().setGitDir(file(".git")).setMustExist(true).build().use { query(Git(it)) }
+fun <T> queryGit(query: (Git) -> T): T = RepositoryBuilder()
+    .setGitDir(layout.projectDirectory.dir(".git").asFile).setMustExist(true)
+    .build().use { query(Git(it)) }
 
 data class GitStatus(val commit: String, val clean: Boolean) {
     fun asCommit() = if (clean) commit else "${commit}-dirty"
@@ -84,18 +89,15 @@ val gitStatus = try {
 }
 
 gradlePlugin {
+    website.set(productUrl)
+    vcsUrl.set("${productUrl}.git")
     plugins.create(project.name) {
         id = pluginId
         implementationClass = pluginClass
         displayName = productTitle
         description = productDescription
+        tags.set(productTags)
     }
-}
-
-pluginBundle {
-    website = productUrl
-    vcsUrl = productUrl
-    pluginTags = mapOf(project.name to productTags)
 }
 
 val manifestAttributes by lazy {
@@ -116,10 +118,8 @@ java {
     toolchain(toolchainSpec(toolsJavaVersion))
     // Not really used by Gradle, only added for better IDE integration
     sourceCompatibility = sourceJavaVersion
-
-    // If we call these here, `PublishPlugin.forceJavadocAndSourcesJars` will throw an exception when it does the same
-    //withJavadocJar()
-    //withSourcesJar()
+    withJavadocJar()
+    withSourcesJar()
 }
 
 repositories {
@@ -131,10 +131,10 @@ dependencies {
     compileOnly(spotbugsAnnotations)
     testCompileOnly(spotbugsAnnotations)
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
-    testImplementation("org.assertj:assertj-core:3.23.1")
-    testImplementation("org.apache.commons:commons-lang3:3.12.0")
-    testImplementation("commons-io:commons-io:2.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.apache.commons:commons-lang3:3.14.0")
+    testImplementation("commons-io:commons-io:2.15.0")
 }
 
 tasks.withType<JavaCompile> {
@@ -191,11 +191,14 @@ tasks.javadoc {
                 .withArtifacts(JvmLibrary::class, JavadocArtifact::class)
                 .execute()
             compileJavadocs.resolvedComponents.mapNotNull { component ->
-                val javadocArtifact = component.getArtifacts(JavadocArtifact::class).single() as ResolvedArtifactResult
-                val javadocJarTree = zipTree(javadocArtifact.file)
-                val javadocDescriptor = descriptorFileNames.mapNotNull { fileName ->
-                    javadocJarTree.matching { include(fileName) }.singleOrNull()
-                }.firstOrNull()
+                val javadocArtifact =
+                    component.getArtifacts(JavadocArtifact::class).singleOrNull() as ResolvedArtifactResult?
+                val javadocDescriptor = javadocArtifact?.let { artifact ->
+                    val javadocJarTree = zipTree(artifact.file)
+                    descriptorFileNames.firstNotNullOfOrNull { fileName ->
+                        javadocJarTree.matching { include(fileName) }.singleOrNull()
+                    }
+                }
                 javadocDescriptor?.let { file ->
                     val id = component.id as ModuleComponentIdentifier
                     OfflineLink(file.parentFile, uri("https://javadoc.io/doc/${id.group}/${id.module}/${id.version}/"))
@@ -218,7 +221,7 @@ tasks.withType<Jar> {
 }
 
 checkstyle {
-    toolVersion = "10.4"
+    toolVersion = "10.12.5"
     maxErrors = 0
     maxWarnings = 0
 }
@@ -235,7 +238,16 @@ tasks.withType<SpotBugsTask> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+// Simple helper class to be able to set system properties whose value is calculated lazily (fixes a bug during `clean`)
+// See: https://github.com/gradle/gradle/issues/25752#issuecomment-1721311612
+class LazyString(private val source: Lazy<String>) : Serializable {
+    constructor(source: () -> String) : this(lazy(source))
+    constructor(source: Provider<String>) : this(source::get)
+    override fun toString() = source.value
+}
 supportedJavaVersions.forEach { javaVersion ->
+    // Unfortunately we need to realize the tasks so that we can call `JacocoReportBase.executionData(Task)` below
+    // See: https://github.com/gradle/gradle/issues/8794
     val testTask =
         if (javaVersion == sourceJavaVersion) tasks.test.get()
         else tasks.create<Test>("testOnJava${javaVersion.majorVersion}")
@@ -243,32 +255,46 @@ supportedJavaVersions.forEach { javaVersion ->
         group = JavaBasePlugin.VERIFICATION_GROUP
         description = "Runs the test suite on Java ${javaVersion.majorVersion}."
         javaLauncher.set(javaToolchains.launcherFor(toolchainSpec(javaVersion)))
-        inputs.dir(file("test-data"))
+
+        val testDataDir = layout.projectDirectory.dir("test-data")
+        systemProperty("testEnv.testDataDir", testDataDir.asFile.absolutePath)
+        inputs.dir(testDataDir)
+
+        val testKitDir = layout.buildDirectory.dir("testKit")
+        systemProperty("testEnv.testKitDir", LazyString(testKitDir.map { it.asFile.absolutePath }))
+        doFirst {
+            Files.createDirectories(testKitDir.get().asFile.toPath())
+        }
 
         val testJacoco = extensions.getByType<JacocoTaskExtension>()
         testJacoco.sessionId = "${project.name}-${name}"
         // Pass the Jacoco Agent JVM argument into the tests so that TestKit can apply it to the JVMs it spawns
-        systemProperty("testEnv.jacocoAgentJvmArg", testJacoco.asJvmArg.let {
+        systemProperty("testEnv.jacocoAgentJvmArg", LazyString {
             // `JacocoTaskExtension.getAsJvmArg` returns a string with relative paths for both the agent JAR and the
             // destination file; we need to make those absolute so that TestKit JVMs can locate them
             fun absolutePath(path: String) = workingDir.resolve(path).absolutePath
             // Example input: "-javaagent:build/tmp/.../jacocoagent.jar=destfile=build/jacoco/test.exec,append=true,..."
             // See: https://www.jacoco.org/jacoco/trunk/doc/agent.html
             val regex = Regex("""^(-javaagent:)([^=]*)(=(?:[^=]*=[^,]*,)*)(destfile=)([^,]*)((?:,[^=]*=[^,]*)*)$""")
-            val groups = regex.matchEntire(it)!!.groups
+            val groups = regex.matchEntire(testJacoco.asJvmArg)!!.groups
             fun group(index: Int) = groups[index]!!.value
             group(1) + absolutePath(group(2)) + group(3) + group(4) + absolutePath(group(5)) + group(6)
         })
-        // Wait for the execution data output file to be released by TestKit JVMs
-        doLast {
-            val executionData = testJacoco.destinationFile!!
-            for (count in 1..20) {
-                if (!executionData.exists() || executionData.renameTo(executionData)) {
-                    break
+        // Wait for the execution data output file to be released by TestKit JVMs (even when some tests fail)
+        addTestListener(object : TestListener {
+            override fun beforeSuite(suite: TestDescriptor) {}
+            override fun beforeTest(testDescriptor: TestDescriptor) {}
+            override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+            override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+                // Do this only at the end of the whole `Test` task (see `AbstractTestTask.afterSuite` docs)
+                if (suite.parent == null) {
+                    val executionData = testJacoco.destinationFile!!
+                    FileChannel.open(executionData.toPath(), StandardOpenOption.READ).use {
+                        it.lock(0L, Long.MAX_VALUE, true).release()
+                    }
                 }
-                Thread.sleep(250)
             }
-        }
+        })
         finalizedBy(tasks.jacocoTestReport)
     }
     tasks.jacocoTestReport {

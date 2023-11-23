@@ -347,12 +347,14 @@ class ApplicationPluginTest {
         Assertions.assertThat(appConf.isCanBeResolved()).isFalse();
         // appConf.getExtendsFrom() can't be verified yet; we will do it after finalizeProject()
         Assertions.assertThat(appConf.getAttributes()).satisfies(attributes -> {
-            Assertions.assertThat(attributes.keySet()).hasSize(4);
+            Assertions.assertThat(attributes.keySet()).hasSize(5);
             Assertions.assertThat(getAttribute(attributes, Usage.USAGE_ATTRIBUTE)).isEqualTo(Usage.JAVA_RUNTIME);
             Assertions.assertThat(getAttribute(attributes, Category.CATEGORY_ATTRIBUTE)).isEqualTo(Category.LIBRARY);
             Assertions.assertThat(getAttribute(attributes, Bundling.BUNDLING_ATTRIBUTE)).isEqualTo(Bundling.EXTERNAL);
             Assertions.assertThat(getAttribute(attributes, LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE))
                     .isEqualTo(Application.LIBRARY_ELEMENTS_APPLICATION_JAR);
+            Assertions.assertThat(getAttribute(attributes, ApplicationName.APPLICATION_NAME_ATTRIBUTE))
+                    .isEqualTo(Application.MAIN_APPLICATION_NAME);
         });
         Assertions.assertThat(appConf.getArtifacts()).singleElement().satisfies(publishArtifact -> {
             Assertions.assertThat(publishArtifact.getName()).isEqualTo(TEST_NAME);

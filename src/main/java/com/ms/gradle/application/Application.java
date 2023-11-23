@@ -170,6 +170,8 @@ public abstract class Application implements ApplicationSpec, Named {
             setAttribute(attributes, Bundling.BUNDLING_ATTRIBUTE, Bundling.EXTERNAL);
             // See: https://docs.gradle.org/current/userguide/cross_project_publications.html#sec:variant-aware-sharing
             setAttribute(attributes, LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, LIBRARY_ELEMENTS_APPLICATION_JAR);
+            // See: https://docs.gradle.org/8.3/userguide/upgrading_version_7.html#unique_attribute_sets
+            setAttribute(attributes, ApplicationName.APPLICATION_NAME_ATTRIBUTE, name);
         });
         configuration.getOutgoing().artifact(getApplicationJar());
     }
