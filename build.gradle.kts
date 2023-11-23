@@ -284,14 +284,18 @@ supportedJavaVersions.forEach { javaVersion ->
             override fun beforeTest(testDescriptor: TestDescriptor) {}
             override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
             override fun afterSuite(suite: TestDescriptor, result: TestResult) {
-                // Do this only after all test suites are executed (see `AbstractTestTask.afterSuite` docs)
+                // Do this only at the end of the whole `Test` task (see `AbstractTestTask.afterSuite` docs)
                 if (suite.parent == null) {
+                    fun isLocked(file: File) = file.exists() && !file.renameTo(file)
                     val executionData = testJacoco.destinationFile!!
-                    for (count in 1..20) {
-                        if (!executionData.exists() || executionData.renameTo(executionData)) {
+                    for (count in 20 downTo 0) {
+                        if (!isLocked(executionData)) {
                             break
+                        } else if (count > 0) {
+                            Thread.sleep(500)
+                        } else {
+                            logger.error("${suite} keeps JaCoCo execution data file locked: ${executionData}")
                         }
-                        Thread.sleep(250)
                     }
                 }
             }
