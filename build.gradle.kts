@@ -12,6 +12,7 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.RepositoryBuilder
+import java.io.Serializable
 import java.net.HttpURLConnection
 import java.net.URI
 import java.nio.file.Files
@@ -234,6 +235,12 @@ tasks.withType<SpotBugsTask> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+// Simple helper class to be able to set system properties whose value is calculated lazily (fixes a bug during `clean`)
+// See: https://github.com/gradle/gradle/issues/25752#issuecomment-1721311612
+class LazyString(initializer: () -> String) : Serializable {
+    private val lazyValue = lazy(initializer)
+    override fun toString() = lazyValue.value
+}
 supportedJavaVersions.forEach { javaVersion ->
     // Unfortunately we need to realize the tasks so that we can call `JacocoReportBase.executionData(Task)` below
     // See: https://github.com/gradle/gradle/issues/8794
@@ -249,27 +256,35 @@ supportedJavaVersions.forEach { javaVersion ->
         val testJacoco = extensions.getByType<JacocoTaskExtension>()
         testJacoco.sessionId = "${project.name}-${name}"
         // Pass the Jacoco Agent JVM argument into the tests so that TestKit can apply it to the JVMs it spawns
-        systemProperty("testEnv.jacocoAgentJvmArg", testJacoco.asJvmArg.let {
+        systemProperty("testEnv.jacocoAgentJvmArg", LazyString {
             // `JacocoTaskExtension.getAsJvmArg` returns a string with relative paths for both the agent JAR and the
             // destination file; we need to make those absolute so that TestKit JVMs can locate them
             fun absolutePath(path: String) = workingDir.resolve(path).absolutePath
             // Example input: "-javaagent:build/tmp/.../jacocoagent.jar=destfile=build/jacoco/test.exec,append=true,..."
             // See: https://www.jacoco.org/jacoco/trunk/doc/agent.html
             val regex = Regex("""^(-javaagent:)([^=]*)(=(?:[^=]*=[^,]*,)*)(destfile=)([^,]*)((?:,[^=]*=[^,]*)*)$""")
-            val groups = regex.matchEntire(it)!!.groups
+            val groups = regex.matchEntire(testJacoco.asJvmArg)!!.groups
             fun group(index: Int) = groups[index]!!.value
             group(1) + absolutePath(group(2)) + group(3) + group(4) + absolutePath(group(5)) + group(6)
         })
-        // Wait for the execution data output file to be released by TestKit JVMs
-        doLast {
-            val executionData = testJacoco.destinationFile!!
-            for (count in 1..20) {
-                if (!executionData.exists() || executionData.renameTo(executionData)) {
-                    break
+        // Wait for the execution data output file to be released by TestKit JVMs, even when some tests fail
+        addTestListener(object : TestListener {
+            override fun beforeSuite(suite: TestDescriptor) {}
+            override fun beforeTest(testDescriptor: TestDescriptor) {}
+            override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+            override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+                // Do this only after all test suites are executed (see `AbstractTestTask.afterSuite` docs)
+                if (suite.parent == null) {
+                    val executionData = testJacoco.destinationFile!!
+                    for (count in 1..20) {
+                        if (!executionData.exists() || executionData.renameTo(executionData)) {
+                            break
+                        }
+                        Thread.sleep(250)
+                    }
                 }
-                Thread.sleep(250)
             }
-        }
+        })
         finalizedBy(tasks.jacocoTestReport)
     }
     tasks.jacocoTestReport {
