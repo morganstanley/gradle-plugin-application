@@ -113,13 +113,6 @@ class ApplicationPluginFunctionalTest {
     }
 
     @Nonnull
-    private final Path testKitDir;
-
-    ApplicationPluginFunctionalTest() throws IOException {
-        testKitDir = Files.createDirectories(Paths.get("build", "testKit").toAbsolutePath());
-    }
-
-    @Nonnull
     @SuppressFBWarnings(value = "NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR",
             justification = "@TempDir is not supported on constructor parameters")
     private Path projectDir;
@@ -139,8 +132,8 @@ class ApplicationPluginFunctionalTest {
 
     private void prepareProjectDir(@Nonnull GradleVersion gradleVersion, @Nonnull String buildFileName)
             throws IOException {
-        Path testDataDir = Paths.get("test-data", TEST_NAME).toAbsolutePath();
-        FileUtils.copyDirectory(testDataDir.toFile(), projectDir.toFile(), FileFilterUtils.or(
+        Path testDataDir = Paths.get(getTestEnvProperty("testDataDir")).toAbsolutePath();
+        FileUtils.copyDirectory(testDataDir.resolve(TEST_NAME).toFile(), projectDir.toFile(), FileFilterUtils.or(
                 FileFilterUtils.directoryFileFilter(),
                 FileFilterUtils.notFileFilter(FileFilterUtils.prefixFileFilter("build.gradle")),
                 FileFilterUtils.nameFileFilter(buildFileName)));
@@ -150,7 +143,7 @@ class ApplicationPluginFunctionalTest {
 
         // Example input: "-javaagent:.../jacocoagent.jar=destfile=.../test.exec,...,sessionid=abcd1234-test,..."
         // See: https://www.jacoco.org/jacoco/trunk/doc/agent.html
-        String jacocoAgentJvmArg = Utils.nonNull(System.getProperty("testEnv.jacocoAgentJvmArg"), "jacocoAgentJvmArg")
+        String jacocoAgentJvmArg = getTestEnvProperty("jacocoAgentJvmArg")
                 .replaceFirst(",sessionid=[^,]+", "$0-gradle" + gradleVersion.getVersion());
         try (Writer propertiesWriter = new OutputStreamWriter(
                 Files.newOutputStream(projectDir.resolve("gradle.properties")),
@@ -163,6 +156,7 @@ class ApplicationPluginFunctionalTest {
 
     @Nonnull
     private GradleRunner makeGradleRunner(@Nonnull GradleVersion version) {
+        Path testKitDir = Paths.get(getTestEnvProperty("testKitDir")).toAbsolutePath();
         GradleRunner runner = GradleRunner.create()
                 .withTestKitDir(testKitDir.toFile())
                 .withProjectDir(projectDir.toFile())
@@ -389,5 +383,10 @@ class ApplicationPluginFunctionalTest {
                 .map(String::valueOf)
                 .collect(Collectors.toSet());
         Assertions.assertThat(path.toFile().list()).containsExactlyInAnyOrderElementsOf(expectedNames);
+    }
+
+    @Nonnull
+    private static String getTestEnvProperty(@Nonnull String name) {
+        return Utils.nonNull(System.getProperty("testEnv." + name), name);
     }
 }

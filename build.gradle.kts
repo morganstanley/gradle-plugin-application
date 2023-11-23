@@ -69,8 +69,9 @@ fun toolchainSpec(javaVersion: JavaVersion) = { toolchain: JavaToolchainSpec ->
     toolchain.languageVersion.set(JavaLanguageVersion.of(javaVersion.majorVersion))
 }
 
-fun <T> queryGit(query: (Git) -> T): T =
-    RepositoryBuilder().setGitDir(file(".git")).setMustExist(true).build().use { query(Git(it)) }
+fun <T> queryGit(query: (Git) -> T): T = RepositoryBuilder()
+    .setGitDir(layout.projectDirectory.dir(".git").asFile).setMustExist(true)
+    .build().use { query(Git(it)) }
 
 data class GitStatus(val commit: String, val clean: Boolean) {
     fun asCommit() = if (clean) commit else "${commit}-dirty"
@@ -237,9 +238,10 @@ tasks.withType<Test> {
 }
 // Simple helper class to be able to set system properties whose value is calculated lazily (fixes a bug during `clean`)
 // See: https://github.com/gradle/gradle/issues/25752#issuecomment-1721311612
-class LazyString(initializer: () -> String) : Serializable {
-    private val lazyValue = lazy(initializer)
-    override fun toString() = lazyValue.value
+class LazyString(private val source: Lazy<String>) : Serializable {
+    constructor(source: () -> String) : this(lazy(source))
+    constructor(source: Provider<String>) : this(source::get)
+    override fun toString() = source.value
 }
 supportedJavaVersions.forEach { javaVersion ->
     // Unfortunately we need to realize the tasks so that we can call `JacocoReportBase.executionData(Task)` below
@@ -251,7 +253,16 @@ supportedJavaVersions.forEach { javaVersion ->
         group = JavaBasePlugin.VERIFICATION_GROUP
         description = "Runs the test suite on Java ${javaVersion.majorVersion}."
         javaLauncher.set(javaToolchains.launcherFor(toolchainSpec(javaVersion)))
-        inputs.dir(file("test-data"))
+
+        val testDataDir = layout.projectDirectory.dir("test-data")
+        systemProperty("testEnv.testDataDir", testDataDir.asFile.absolutePath)
+        inputs.dir(testDataDir)
+
+        val testKitDir = layout.buildDirectory.dir("testKit")
+        systemProperty("testEnv.testKitDir", LazyString(testKitDir.map { it.asFile.absolutePath }))
+        doFirst {
+            Files.createDirectories(testKitDir.get().asFile.toPath())
+        }
 
         val testJacoco = extensions.getByType<JacocoTaskExtension>()
         testJacoco.sessionId = "${project.name}-${name}"
