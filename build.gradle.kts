@@ -18,7 +18,7 @@ import java.nio.file.Files
 
 buildscript {
     dependencies {
-        classpath("org.eclipse.jgit:org.eclipse.jgit:6.3.0.202209071007-r")
+        classpath("org.eclipse.jgit:org.eclipse.jgit:6.7.0.202309050840-r")
     }
 }
 
@@ -26,7 +26,7 @@ buildscript {
 tasks.wrapper {
     // When new Gradle versions become available, update `ApplicationPluginFunctionalTest.supportedGradleVersions` too
     // See: https://gradle.org/releases/
-    gradleVersion = "8.3"
+    gradleVersion = "8.4"
     distributionType = Wrapper.DistributionType.ALL
 }
 // --- ========== ---
@@ -37,7 +37,7 @@ plugins {
     id("com.gradle.plugin-publish").version("1.2.1")
     checkstyle
     pmd
-    id("com.github.spotbugs").version("5.1.3")
+    id("com.github.spotbugs").version("5.2.3")
     jacoco
 }
 
@@ -127,10 +127,10 @@ dependencies {
     compileOnly(spotbugsAnnotations)
     testCompileOnly(spotbugsAnnotations)
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
-    testImplementation("org.assertj:assertj-core:3.23.1")
-    testImplementation("org.apache.commons:commons-lang3:3.12.0")
-    testImplementation("commons-io:commons-io:2.11.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("org.assertj:assertj-core:3.24.2")
+    testImplementation("org.apache.commons:commons-lang3:3.14.0")
+    testImplementation("commons-io:commons-io:2.15.0")
 }
 
 tasks.withType<JavaCompile> {
@@ -217,7 +217,7 @@ tasks.withType<Jar> {
 }
 
 checkstyle {
-    toolVersion = "10.12.3"
+    toolVersion = "10.12.5"
     maxErrors = 0
     maxWarnings = 0
 }

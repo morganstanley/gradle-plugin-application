@@ -7,7 +7,7 @@
 Checkstyle configuration based on the Google Java Style Guide.
 References:
 * https://google.github.io/styleguide/javaguide.html
-* https://github.com/checkstyle/checkstyle/blob/checkstyle-10.12.3/src/main/resources/google_checks.xml
+* https://github.com/checkstyle/checkstyle/blob/checkstyle-10.12.5/src/main/resources/google_checks.xml
 * http://checkstyle.org
 -->
 
