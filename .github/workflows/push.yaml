@@ -9,7 +9,7 @@ jobs:
     steps:
 
       - name: Checkout project sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Java toolchains
         uses: actions/setup-java@v3
