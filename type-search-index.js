@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes","url":"allclasses-index.html"},{"p":"com.ms.gradle.application","l":"Application"},{"p":"com.ms.gradle.application","l":"ApplicationJar"},{"p":"com.ms.gradle.application","l":"ApplicationName"},{"p":"com.ms.gradle.application","l":"ApplicationPlugin"},{"p":"com.ms.gradle.application","l":"ApplicationSpec"}]
