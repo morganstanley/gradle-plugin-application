@@ -29,7 +29,7 @@ buildscript {
 tasks.wrapper {
     // When new Gradle versions become available, update `ApplicationPluginFunctionalTest.supportedGradleVersions` too
     // See: https://gradle.org/releases/
-    gradleVersion = "8.4"
+    gradleVersion = "8.5"
     distributionType = Wrapper.DistributionType.ALL
 }
 // --- ========== ---
@@ -45,7 +45,7 @@ plugins {
 }
 
 group = "com.ms.gradle"
-version = "2.0.1"
+version = "2.0.2"
 
 val pluginId = "com.ms.gradle.application"
 val pluginClass = "com.ms.gradle.application.ApplicationPlugin"
@@ -62,7 +62,8 @@ val productTags = setOf("application", "executable", "jar", "java", "jvm")
 val productUrl = "https://github.com/morganstanley/gradle-plugin-application"
 
 // When adding support for new Java versions, update `ApplicationPluginFunctionalTest.MINIMUM_GRADLE_VERSIONS` too
-val supportedJavaVersions = sortedSetOf(JavaVersion.VERSION_1_8, JavaVersion.VERSION_11, JavaVersion.VERSION_17)
+val supportedJavaVersions = sortedSetOf(
+    JavaVersion.VERSION_1_8, JavaVersion.VERSION_11, JavaVersion.VERSION_17, JavaVersion.VERSION_21)
 val sourceJavaVersion = supportedJavaVersions.minOf { it }
 val toolsJavaVersion = JavaVersion.VERSION_11
 
@@ -283,8 +284,8 @@ supportedJavaVersions.forEach { javaVersion ->
         // Wait for the execution data output file to be released by TestKit JVMs (even when some tests fail)
         addTestListener(object : TestListener {
             override fun beforeSuite(suite: TestDescriptor) {}
-            override fun beforeTest(testDescriptor: TestDescriptor) {}
-            override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+            override fun beforeTest(test: TestDescriptor) {}
+            override fun afterTest(test: TestDescriptor, result: TestResult) {}
             override fun afterSuite(suite: TestDescriptor, result: TestResult) {
                 // Do this only at the end of the whole `Test` task (see `AbstractTestTask.afterSuite` docs)
                 if (suite.parent == null) {
