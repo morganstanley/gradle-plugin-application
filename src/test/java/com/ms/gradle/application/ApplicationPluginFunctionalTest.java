@@ -65,7 +65,8 @@ class ApplicationPluginFunctionalTest {
     private static final Map<JavaVersion, GradleVersion> MINIMUM_GRADLE_VERSIONS = toImmutableMap(Stream.of(
                     Pair.of(JavaVersion.VERSION_1_8, GradleVersion.version("2.0")),
                     Pair.of(JavaVersion.VERSION_11, GradleVersion.version("5.0")),
-                    Pair.of(JavaVersion.VERSION_17, GradleVersion.version("7.3"))),
+                    Pair.of(JavaVersion.VERSION_17, GradleVersion.version("7.3")),
+                    Pair.of(JavaVersion.VERSION_21, GradleVersion.version("8.5"))),
             Pair::getKey, Pair::getValue);
 
     private static final GradleVersion CURRENT_GRADLE_VERSION = GradleVersion.current();

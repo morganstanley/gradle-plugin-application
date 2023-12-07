@@ -62,7 +62,8 @@ val productTags = setOf("application", "executable", "jar", "java", "jvm")
 val productUrl = "https://github.com/morganstanley/gradle-plugin-application"
 
 // When adding support for new Java versions, update `ApplicationPluginFunctionalTest.MINIMUM_GRADLE_VERSIONS` too
-val supportedJavaVersions = sortedSetOf(JavaVersion.VERSION_1_8, JavaVersion.VERSION_11, JavaVersion.VERSION_17)
+val supportedJavaVersions = sortedSetOf(
+    JavaVersion.VERSION_1_8, JavaVersion.VERSION_11, JavaVersion.VERSION_17, JavaVersion.VERSION_21)
 val sourceJavaVersion = supportedJavaVersions.minOf { it }
 val toolsJavaVersion = JavaVersion.VERSION_11
 
