@@ -29,7 +29,7 @@ buildscript {
 tasks.wrapper {
     // When new Gradle versions become available, update `ApplicationPluginFunctionalTest.supportedGradleVersions` too
     // See: https://gradle.org/releases/
-    gradleVersion = "8.4"
+    gradleVersion = "8.5"
     distributionType = Wrapper.DistributionType.ALL
 }
 // --- ========== ---
@@ -283,8 +283,8 @@ supportedJavaVersions.forEach { javaVersion ->
         // Wait for the execution data output file to be released by TestKit JVMs (even when some tests fail)
         addTestListener(object : TestListener {
             override fun beforeSuite(suite: TestDescriptor) {}
-            override fun beforeTest(testDescriptor: TestDescriptor) {}
-            override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+            override fun beforeTest(test: TestDescriptor) {}
+            override fun afterTest(test: TestDescriptor, result: TestResult) {}
             override fun afterSuite(suite: TestDescriptor, result: TestResult) {
                 // Do this only at the end of the whole `Test` task (see `AbstractTestTask.afterSuite` docs)
                 if (suite.parent == null) {
