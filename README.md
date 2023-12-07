@@ -48,7 +48,7 @@ The plugin adds an extension named `applications` to the project, which is a con
 // build.gradle
 
 plugins {
-    id "com.ms.gradle.application" version "2.0.1"
+    id "com.ms.gradle.application" version "2.0.2"
 }
 
 applications.main {
@@ -64,7 +64,7 @@ For more complex examples, see the [build file of the plugin's functional test](
 // build.gradle.kts
 
 plugins {
-    id("com.ms.gradle.application").version("2.0.1")
+    id("com.ms.gradle.application").version("2.0.2")
 }
 
 applications.main {

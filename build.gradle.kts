@@ -45,7 +45,7 @@ plugins {
 }
 
 group = "com.ms.gradle"
-version = "2.0.1"
+version = "2.0.2"
 
 val pluginId = "com.ms.gradle.application"
 val pluginClass = "com.ms.gradle.application.ApplicationPlugin"
