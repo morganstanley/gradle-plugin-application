@@ -37,6 +37,7 @@ jobs:
         with:
           name: build-artifacts
           path: |
+            build/docs/
             build/libs/
             build/reports/
             build/local-publish/

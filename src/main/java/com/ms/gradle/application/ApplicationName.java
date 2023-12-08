@@ -13,6 +13,10 @@ import org.gradle.api.attributes.TestSuiteName;
  */
 @SuppressWarnings("PMD.ConstantsInInterface") // This approach is consistent with the rest of Gradle
 public interface ApplicationName extends Named {
+
+    /**
+     * The {@link Attribute} instance to be used as the key for {@link ApplicationName} values.
+     */
     Attribute<ApplicationName> APPLICATION_NAME_ATTRIBUTE =
             Attribute.of("com.ms.gradle.application.name", ApplicationName.class);
 }

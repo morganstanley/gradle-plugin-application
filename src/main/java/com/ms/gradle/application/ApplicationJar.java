@@ -227,7 +227,7 @@ public abstract class ApplicationJar extends Jar implements ApplicationSpec {
         //  - Leave the default `archiveFileName` pattern intact
         //  - Keep the defaults for `archiveAppendix`, `archiveVersion`, `archiveClassifier` and `archiveExtension`
         //  - Override the default value of `archiveBaseName` if we can set something that is meaningful and unique
-        //    (e.g. in our `Bound` subclass), leave it untouched otherwise
+        //    (e.g. in our `Bound` subclass), but leave it untouched otherwise
     }
 
     /**
