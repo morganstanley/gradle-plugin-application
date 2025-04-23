@@ -2,7 +2,7 @@
 
 [![Lifecycle](https://img.shields.io/badge/Lifecycle-Active-green)](#application-plugin-for-gradle)
 [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v.svg?label=Gradle+Plugin+Portal&metadataUrl=https://plugins.gradle.org/m2/com/ms/gradle/application/com.ms.gradle.application.gradle.plugin/maven-metadata.xml)](https://plugins.gradle.org/plugin/com.ms.gradle.application)
-[![JavaDoc](https://img.shields.io/badge/JavaDoc-latest-blue)](http://opensource.morganstanley.com/gradle-plugin-application)
+[![JavaDoc](https://img.shields.io/badge/JavaDoc-latest-blue)](http://morganstanley.github.io/gradle-plugin-application)
 [![Build Status](https://github.com/morganstanley/gradle-plugin-application/actions/workflows/push.yaml/badge.svg?branch=main)](https://github.com/morganstanley/gradle-plugin-application/actions/workflows/push.yaml?query=branch:main)
 
 [Morgan Stanley](https://github.com/morganstanley)'s Application plugin for Gradle allows you to package your Java-based applications for distribution, much like [Gradle's built-in Application plugin](https://docs.gradle.org/current/userguide/application_plugin.html) does, but in a more standard and more flexible way.
@@ -103,7 +103,7 @@ All you need to set yourself is the `mainClass` property, and you're good to go!
 
 ### Configuring applications
 
-* The plugin provides a number of settings to customize each application that gets built. For the available options, please refer to the [Javadoc of the `Application` class](http://opensource.morganstanley.com/gradle-plugin-application/com/ms/gradle/application/Application.html).
+* The plugin provides a number of settings to customize each application that gets built. For the available options, please refer to the [Javadoc of the `Application` class](http://morganstanley.github.io/gradle-plugin-application/com/ms/gradle/application/Application.html).
 * If you need to build multiple applications, you can simply use the `applications` container to set them up.
 
 ## Credits
