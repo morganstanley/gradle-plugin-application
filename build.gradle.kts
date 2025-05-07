@@ -13,8 +13,6 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException
 import org.eclipse.jgit.lib.Constants
 import org.eclipse.jgit.lib.RepositoryBuilder
 import java.io.Serializable
-import java.net.HttpURLConnection
-import java.net.URI
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -45,7 +43,7 @@ plugins {
 }
 
 group = "com.ms.gradle"
-version = "2.0.2"
+version = "2.0.3"
 
 val pluginId = "com.ms.gradle.application"
 val pluginClass = "com.ms.gradle.application.ApplicationPlugin"
@@ -65,7 +63,7 @@ val productUrl = "https://github.com/morganstanley/gradle-plugin-application"
 val supportedJavaVersions = sortedSetOf(
     JavaVersion.VERSION_1_8, JavaVersion.VERSION_11, JavaVersion.VERSION_17, JavaVersion.VERSION_21)
 val sourceJavaVersion = supportedJavaVersions.minOf { it }
-val toolsJavaVersion = JavaVersion.VERSION_11
+val toolsJavaVersion = supportedJavaVersions.maxOf { it }
 
 fun toolchainSpec(javaVersion: JavaVersion) = { toolchain: JavaToolchainSpec ->
     toolchain.vendor.set(JvmVendorSpec.AZUL)
@@ -148,71 +146,13 @@ tasks.javadoc {
         memberLevel = JavadocMemberLevel.PUBLIC
         // See: https://github.com/gradle/gradle/issues/18274
         addStringOption("-release", sourceJavaVersion.majorVersion)
+        links("https://docs.gradle.org/${GradleVersion.current().baseVersion.version}/javadoc/")
     }
-
-    // Javadoc in Java 9+ requires this `linkoffline` workaround to be able to link to Java 8 docs
-    // In case of a package overlap (e.g. `javax.annotation`), the last offline link takes precedence
-    // To have control over the situation, we have to use offline links for every dependency
     doFirst {
-        val linksDir = temporaryDir.resolve("links")
-        delete(linksDir.toPath())
-        Files.createDirectories(linksDir.toPath())
-
-        data class OfflineLink(val dir: File, val uri: URI)
-        val descriptorFileNames = listOf("element-list", "package-list")
-
-        // For built-in dependencies, download Javadoc descriptors manually from the URI
-        val linksForBuiltIns = listOf(
-            OfflineLink(linksDir.resolve("java"),
-                uri("https://docs.oracle.com/javase/${sourceJavaVersion.majorVersion}/docs/api/")),
-            OfflineLink(linksDir.resolve("gradle"),
-                uri("https://docs.gradle.org/${GradleVersion.current().baseVersion.version}/javadoc/")),
-        ).onEach { offlineLink ->
-            val javadocDescriptor = descriptorFileNames.mapNotNull { fileName ->
-                with(offlineLink.uri.resolve(fileName).toURL().openConnection() as HttpURLConnection) {
-                    instanceFollowRedirects = false
-                    inputStream.use { content ->
-                        responseCode.takeIf { it == 200 }?.let {
-                            Files.createDirectories(offlineLink.dir.toPath())
-                            offlineLink.dir.resolve(fileName).apply {
-                                Files.copy(content, toPath())
-                            }
-                        }
-                    }
-                }
-            }.firstOrNull()
-            checkNotNull(javadocDescriptor) { "Could not download Javadoc descriptor from ${offlineLink.uri}" }
-        }
-
-        // For external modules, extract Javadoc descriptors from the module's Javadoc JAR
-        val linksForModules = run {
-            val compileComponents = configurations.compileClasspath.get().incoming.resolutionResult.allComponents
-            val compileJavadocs = dependencies.createArtifactResolutionQuery()
-                .forComponents(compileComponents.map { it.id })
-                .withArtifacts(JvmLibrary::class, JavadocArtifact::class)
-                .execute()
-            compileJavadocs.resolvedComponents.mapNotNull { component ->
-                val javadocArtifact =
-                    component.getArtifacts(JavadocArtifact::class).singleOrNull() as ResolvedArtifactResult?
-                val javadocDescriptor = javadocArtifact?.let { artifact ->
-                    val javadocJarTree = zipTree(artifact.file)
-                    descriptorFileNames.firstNotNullOfOrNull { fileName ->
-                        javadocJarTree.matching { include(fileName) }.singleOrNull()
-                    }
-                }
-                javadocDescriptor?.let { file ->
-                    val id = component.id as ModuleComponentIdentifier
-                    OfflineLink(file.parentFile, uri("https://javadoc.io/doc/${id.group}/${id.module}/${id.version}/"))
-                }
-            }
-        }
-
-        // Add offline links
-        linksForBuiltIns.plus(linksForModules).forEach { offlineLink ->
-            fullOptions.linksOffline(offlineLink.uri.toString(), offlineLink.dir.path)
-        }
-        // Generate correct deep links to Java 8 and Gradle methods (HTML5: `#toString()`, HTML4: `#toString--`)
-        fullOptions.addBooleanOption("html4", true)
+        // `compileClasspath` is already an input via `Javadoc.classpath` (see `JvmPluginsHelper.configureJavaDocTask`)
+        configurations.compileClasspath.get().incoming.resolutionResult.allComponents
+            .mapNotNull { it.id as? ModuleComponentIdentifier }
+            .forEach { fullOptions.links("https://javadoc.io/doc/${it.group}/${it.module}/${it.version}/") }
     }
 }
 
