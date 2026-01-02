@@ -1,6 +1,6 @@
 # Application plugin for Gradle
 
-[![Lifecycle](https://img.shields.io/badge/Lifecycle-Active-green)](#application-plugin-for-gradle)
+[![Lifecycle Active](https://img.shields.io/badge/Lifecycle-Active-brightgreen)](#application-plugin-for-gradle)
 [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v.svg?label=Gradle+Plugin+Portal&metadataUrl=https://plugins.gradle.org/m2/com/ms/gradle/application/com.ms.gradle.application.gradle.plugin/maven-metadata.xml)](https://plugins.gradle.org/plugin/com.ms.gradle.application)
 [![JavaDoc](https://img.shields.io/badge/JavaDoc-latest-blue)](http://morganstanley.github.io/gradle-plugin-application)
 [![Build Status](https://github.com/morganstanley/gradle-plugin-application/actions/workflows/push.yaml/badge.svg?branch=main)](https://github.com/morganstanley/gradle-plugin-application/actions/workflows/push.yaml?query=branch:main)
